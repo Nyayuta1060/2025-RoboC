@@ -62,6 +62,11 @@ int main()
     // id1, 2: Roger id3, 4: むれ持ち上げ id5, 6: むれローラー
     int16_t robomas_rpm[6] = {0};
 
+    for (int i = 0; i < robomas_amount; ++i)
+    {
+        pid[i].reset();
+    }
+
     while(1)
     {
         auto now = HighResClock::now();
