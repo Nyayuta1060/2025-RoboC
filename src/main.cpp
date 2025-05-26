@@ -72,7 +72,7 @@ int main()
         }
 
         can_pwr1[0] = CROW_SPEED_MAP.at(zozo_crow);
-        can_pwr2[0] = pillar_push;
+        can_pwr1[1] = pillar_push;
 
         if(now - pre > 10ms) // CAN送信など制御信号の送信を行うスコープ
         {
