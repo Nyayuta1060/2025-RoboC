@@ -116,12 +116,23 @@ int main()
         if(now - pre > 10ms) // CAN送信など制御信号の送信を行うスコープ
         {
             float elapsed = duration_to_sec(now - pre);
-            pre = now;
+
+            for (int i = 0; i < robomas_amount; i++)
+            {
+                constexpr float rmp_to_rad = 2 * M_PI / 60;
+                float motor_dps = robomas.get_rpm(i + 1) * rmp_to_rad;
+                const float percent = pid[i].calc(robomas_rpm[i], motor_dps, elapsed);
+                // printf("dps: %f, goal: %d, out: %d\n", motor_dps, goal_ang_vel, out);
+
+                robomas.set_output_percent(percent, i + 1);
+            }
+            robomas.write();
 
             CANMessage msg1(can_id[0], (const uint8_t *)&can_pwr1, 8);
             CANMessage msg2(can_id[1], (const uint8_t *)&can_pwr2, 8);
             can1.write(msg1);
             can1.write(msg2);
+            pre = now;
         }
     }
 }
