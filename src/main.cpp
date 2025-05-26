@@ -41,17 +41,14 @@ int main()
 
         if(readline(pc, received, sizeof(received)) == 0) //UART受取成功時のスコープ
         {
-            if(strcmp(received, " /*msg*/ "))
-            {
-                if(strcmp(received, "") == 0){
-                    zozo_crow = state::FRONT;
-                }
-                else if(strcmp(received, "") == 0){
-                    zozo_crow = state::BACK;
-                }
-                else if(strcmp(received, "") == 0){
-                    zozo_crow = state::STOP;
-                }
+            if(strcmp(received, "") == 0){
+                zozo_crow = state::FRONT;
+            }
+            else if(strcmp(received, "") == 0){
+                zozo_crow = state::BACK;
+            }
+            else if(strcmp(received, "") == 0){
+                zozo_crow = state::STOP;
             }
         }
 
