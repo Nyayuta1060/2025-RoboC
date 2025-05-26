@@ -6,6 +6,8 @@
 BufferedSerial pc(USBTX, USBRX, 115200);
 CAN can1(PA_11, PA_12, 1e6);
 constexpr int can_id[2] = {0};
+CANMessage msg1;
+CANMessage msg2;
 
 bool readline(BufferedSerial &serial, char *buffer, size_t size, bool is_integar = false, bool is_float = false);
 
