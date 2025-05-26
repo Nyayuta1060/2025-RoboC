@@ -49,6 +49,8 @@ int main()
         static auto pre = now;
 
         char received[15] = "";
+        int pillar_push = 0;
+
 
         if(readline(pc, received, sizeof(received)) == 0) //UART受取成功時のスコープ
         {
@@ -62,6 +64,19 @@ int main()
                 zozo_crow = state::STOP;
             }
 
+            if (strcmp(received, "R2") == 0)
+            {
+                char pwr[8] = "";
+                if(readline(pc, pwr, sizeof(pwr), true, false) == 0){
+                    pillar_push = atoi(pwr);
+                }
+            }
+            else if (strcmp(received, "L2") == 0)
+            {
+                char pwr[8] = "";
+                if(readline(pc, pwr, sizeof(pwr), true, false) == 0){
+                    pillar_push = atoi(pwr) * -1;
+                }
             if(strcmp(received, "go_pylon") == 0){
                 pylon_rack = state::FRONT;
             }
@@ -74,6 +89,7 @@ int main()
         }
 
         can_pwr1[0] = CROW_SPEED_MAP.at(zozo_crow);
+        can_pwr1[1] = pillar_push;
         can_pwr2[0] = PYLON_SPEED_MAP.at(pylon_rack);
 
         if(now - pre > 10ms) // CAN送信など制御信号の送信を行うスコープ
