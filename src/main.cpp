@@ -2,9 +2,24 @@
 #include "C620.hpp"
 #include "PID_new.hpp"
 #include <map>
+#include <array>
 
 BufferedSerial pc(USBTX, USBRX, 115200);
 CAN can1(PA_11, PA_12, 1e6);
+dji::C620 robomas(PB_12, PB_13);
+PidGain roger_gain = {1, 1, 1};
+PidGain lift_gain = {1, 1, 1};
+PidGain roller_gain = {1, 1, 1};
+constexpr int robomas_amount = 6;
+
+std::array<Pid, robomas_amount> pid =
+    {Pid({roger_gain, -1, 1}),
+    Pid({roger_gain, -1, 1}),
+    Pid({lift_gain, -1, 1}),
+    Pid({lift_gain, -1, 1}),
+    Pid({roller_gain, -1, 1}),
+    Pid({roller_gain, -1, 1})};
+
 constexpr int can_id[2] = {0};
 CANMessage msg1;
 CANMessage msg2;
@@ -42,6 +57,8 @@ int main()
 
     int16_t can_pwr1[4] = {0};
     int16_t can_pwr2[4] = {0};
+    // id1, 2: Roger id3, 4: むれ持ち上げ id5, 6: むれローラー
+    int16_t robomas_rpm[6] = {0};
 
     while(1)
     {
