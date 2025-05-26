@@ -30,10 +30,10 @@ const std::map<state, int> CROW_SPEED_MAP =
 int main()
 {
     auto zozo_crow = state::STOP;
-    int crow_speed = 0;
 
     int16_t can_pwr1[4] = {0};
     int16_t can_pwr2[4] = {0};
+
     while(1)
     {
         auto now = HighResClock::now();
@@ -54,7 +54,7 @@ int main()
             }
         }
 
-        crow_speed = CROW_SPEED_MAP.at(zozo_crow);
+        can_pwr1[0] = CROW_SPEED_MAP.at(zozo_crow);
 
         if(now - pre > 10ms) // CAN送信など制御信号の送信を行うスコープ
         {
@@ -79,7 +79,7 @@ bool readline(BufferedSerial &serial, char *buffer, const size_t size, const boo
         return 1;
     }
 
-    while ((buff != '\n') and i < size)
+    while ((buff != '\n') and i < (int)size)
     {
         serial.read(&buff, sizeof(buff)); // シリアル受信
         // printf("%c", buff);
