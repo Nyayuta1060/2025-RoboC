@@ -77,6 +77,8 @@ int main()
                 if(readline(pc, pwr, sizeof(pwr), true, false) == 0){
                     pillar_push = atoi(pwr) * -1;
                 }
+                
+            }
             if(strcmp(received, "go_pylon") == 0){
                 pylon_rack = state::FRONT;
             }
