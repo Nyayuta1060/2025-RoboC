@@ -25,6 +25,8 @@ CANMessage msg1;
 CANMessage msg2;
 
 bool readline(BufferedSerial &serial, char *buffer, size_t size, bool is_integar = false, bool is_float = false);
+float duration_to_sec(const std::chrono::duration<float> &duration);
+
 
 enum class state
 {
@@ -113,6 +115,7 @@ int main()
 
         if(now - pre > 10ms) // CAN送信など制御信号の送信を行うスコープ
         {
+            float elapsed = duration_to_sec(now - pre);
             pre = now;
 
             CANMessage msg1(can_id[0], (const uint8_t *)&can_pwr1, 8);
@@ -164,4 +167,9 @@ bool readline(BufferedSerial &serial, char *buffer, const size_t size, const boo
     }
     // printf("\n");
     return 0;
+}
+
+float duration_to_sec(const std::chrono::duration<float> &duration)
+{
+    return duration.count();
 }
