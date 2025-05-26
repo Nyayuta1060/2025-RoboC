@@ -1,9 +1,11 @@
-# include "mbed.h"
-# include <map>
+#include "mbed.h"
+#include "C620.hpp"
+#include "PID_new.hpp"
+#include <map>
 
 BufferedSerial pc(USBTX, USBRX, 115200);
 CAN can1(PA_11, PA_12, 1e6);
-
+constexpr int can_id[2] = {0};
 
 bool readline(BufferedSerial &serial, char *buffer, size_t size, bool is_integar = false, bool is_float = false);
 
@@ -28,6 +30,8 @@ int main()
     auto zozo_crow = state::STOP;
     int crow_speed = 0;
 
+    int16_t can_pwr1[4] = {0};
+    int16_t can_pwr2[4] = {0};
     while(1)
     {
         auto now = HighResClock::now();
@@ -56,6 +60,11 @@ int main()
         if(now - pre > 10ms) // CAN送信など制御信号の送信を行うスコープ
         {
             pre = now;
+
+            CANMessage msg1(can_id[0], (const uint8_t *)&can_pwr1, 8);
+            CANMessage msg2(can_id[1], (const uint8_t *)&can_pwr2, 8);
+            can1.write(msg1);
+            can1.write(msg2);
         }
     }
 }
