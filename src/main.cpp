@@ -20,9 +20,8 @@ std::array<Pid, robomas_amount> pid =
     Pid({roller_gain, -1, 1}),
     Pid({roller_gain, -1, 1})};
 
-constexpr int can_id[2] = {0};
+constexpr int can_id = 3;
 CANMessage msg1;
-CANMessage msg2;
 
 bool readline(BufferedSerial &serial, char *buffer, size_t size, bool is_integar = false, bool is_float = false);
 float duration_to_sec(const std::chrono::duration<float> &duration);
@@ -33,6 +32,73 @@ enum class state
     FRONT,
     STOP,
     BACK
+};
+struct Ps5
+{
+    int8_t lstick_x = 0;
+    int8_t lstick_y = 0;
+    int8_t rstick_x = 0;
+    int8_t rstick_y = 0;
+    uint8_t l2 = 0;
+    uint8_t r2 = 0;
+
+    bool right = 0;
+    bool up = 0;
+    bool left = 0;
+    bool down = 0;
+    bool circle = 0;
+    bool triangle = 0;
+    bool square = 0;
+    bool cross = 0;
+    bool l1 = 0;
+    bool r1 = 0;
+    bool l3 = 0;
+    bool r3 = 0;
+    bool option = 0;
+    bool share = 0;
+
+    void parse(CANMessage msg)
+    {
+        switch (msg.id)
+        {
+            case 50:
+            lstick_x = msg.data[0];
+            lstick_y = msg.data[1];
+            rstick_x = msg.data[2];
+            rstick_y = msg.data[3];
+            l2 = msg.data[4];
+            r2 = msg.data[5];
+            break;
+
+            case 51:
+            right = msg.data[0] >> 3 & 1;
+            up = msg.data[0] >> 2 & 1;
+            left = msg.data[0] >> 1 & 1;
+            down = msg.data[0] & 1;
+            circle = msg.data[1] >> 3 & 1;
+            triangle = msg.data[1] >> 2 & 1;
+            square = msg.data[1] >> 1 & 1;
+            cross = msg.data[1] & 1;
+            l1 = msg.data[2];
+            r1 = msg.data[3];
+            l3 = msg.data[4];
+            r3 = msg.data[5];
+            option = msg.data[6];
+            share = msg.data[7];
+            break;
+        }
+    }
+
+    bool read(CAN& can)
+    {
+        CANMessage msg;
+        if (can.read(msg); msg.id == 50 || msg.id == 51)
+        {
+            parse(msg);
+            return true;
+        }
+        return false;
+    }
 };
 
 constexpr int CROW_SPEED = 15000;
@@ -54,11 +120,14 @@ const std::map<state, int> PYLON_SPEED_MAP =
 
 int main()
 {
+    Ps5 ps5;
     auto zozo_crow = state::STOP;
     auto pylon_rack = state::STOP;
+    int pillar_push = 0;
+
+    constexpr int max_pillar_pwr = 10000;
 
     int16_t can_pwr1[4] = {0};
-    int16_t can_pwr2[4] = {0};
     // id1, 2: Roger id3, 4: むれ持ち上げ id5, 6: むれローラー
     int16_t robomas_rpm[6] = {0};
 
@@ -72,51 +141,17 @@ int main()
         auto now = HighResClock::now();
         static auto pre = now;
 
-        char received[15] = "";
-        int pillar_push = 0;
-
-
-        if(readline(pc, received, sizeof(received)) == 0) //UART受取成功時のスコープ
+        if (ps5.read(can1))
         {
-            if(strcmp(received, "front_crow") == 0){
-                zozo_crow = state::FRONT;
-            }
-            else if(strcmp(received, "back_crow") == 0){
-                zozo_crow = state::BACK;
-            }
-            else if(strcmp(received, "stop_crow") == 0){
-                zozo_crow = state::STOP;
-            }
+            pillar_push = ps5.l2 > ps5.r2 ? ps5.l2 / 255.0 * max_pillar_pwr : ps5.r2 / 255.0 * max_pillar_pwr * -1;
 
-            if (strcmp(received, "R2") == 0)
-            {
-                char pwr[8] = "";
-                if(readline(pc, pwr, sizeof(pwr), true, false) == 0){
-                    pillar_push = atoi(pwr);
-                }
-            }
-            else if (strcmp(received, "L2") == 0)
-            {
-                char pwr[8] = "";
-                if(readline(pc, pwr, sizeof(pwr), true, false) == 0){
-                    pillar_push = atoi(pwr) * -1;
-                }
-                
-            }
-            if(strcmp(received, "go_pylon") == 0){
-                pylon_rack = state::FRONT;
-            }
-            else if(strcmp(received, "back_pylon") == 0){
-                pylon_rack = state::BACK;
-            }
-            else if(strcmp(received, "stop_pylon") == 0){
-                pylon_rack = state::STOP;
-            }
+            pylon_rack = ps5.left ? state::FRONT : ps5.right ? state::BACK : state::STOP;
+            zozo_crow = ps5.up ? state::FRONT : ps5.down ? state::BACK : state::STOP;
         }
 
         can_pwr1[0] = CROW_SPEED_MAP.at(zozo_crow);
         can_pwr1[1] = pillar_push;
-        can_pwr2[0] = PYLON_SPEED_MAP.at(pylon_rack);
+        can_pwr1[3] = PYLON_SPEED_MAP.at(pylon_rack);
 
         if(now - pre > 10ms) // CAN送信など制御信号の送信を行うスコープ
         {
@@ -133,10 +168,8 @@ int main()
             }
             robomas.write();
 
-            CANMessage msg1(can_id[0], (const uint8_t *)&can_pwr1, 8);
-            CANMessage msg2(can_id[1], (const uint8_t *)&can_pwr2, 8);
+            CANMessage msg1(can_id, (const uint8_t *)&can_pwr1, 8);
             can1.write(msg1);
-            can1.write(msg2);
             pre = now;
         }
     }
