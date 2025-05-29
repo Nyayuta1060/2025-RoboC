@@ -125,6 +125,8 @@ int main()
     auto pylon_rack = state::STOP;
     int pillar_push = 0;
 
+    bool pre_square = 0;
+
     constexpr int max_pillar_pwr = 10000;
 
     int16_t can_pwr1[4] = {0};
@@ -145,8 +147,24 @@ int main()
         {
             pillar_push = ps5.l2 > ps5.r2 ? ps5.l2 / 255.0 * max_pillar_pwr : ps5.r2 / 255.0 * max_pillar_pwr * -1;
 
-            pylon_rack = ps5.left ? state::FRONT : ps5.right ? state::BACK : state::STOP;
             zozo_crow = ps5.up ? state::FRONT : ps5.down ? state::BACK : state::STOP;
+
+            if (ps5.square == 1 && pre_square == 0)
+            {
+                switch (pylon_rack)
+                {
+                    case state::STOP:
+                    pylon_rack = state::FRONT;
+                    break;
+                    case state::FRONT:
+                    pylon_rack = state::BACK;
+                    break;
+                    case state::BACK:
+                    pylon_rack = state::STOP;
+                    break;
+                }
+            }
+            pre_square = ps5.square;
         }
 
         can_pwr1[0] = CROW_SPEED_MAP.at(zozo_crow);
