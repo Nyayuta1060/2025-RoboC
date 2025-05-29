@@ -124,8 +124,10 @@ int main()
     auto zozo_crow = state::STOP;
     auto pylon_rack = state::STOP;
     int pillar_push = 0;
+    int roller_push = 0;
 
     constexpr int max_pillar_pwr = 10000;
+    constexpr int max_r_push_pwr = 7000;
 
     int16_t can_pwr1[4] = {0};
     // id1, 2: Roger id3, 4: むれ持ち上げ id5, 6: むれローラー
@@ -146,6 +148,7 @@ int main()
         if (ps5.read(can1))
         {
             pillar_push = ps5.l2 > ps5.r2 ? ps5.l2 / 255.0 * max_pillar_pwr : ps5.r2 / 255.0 * max_pillar_pwr * -1;
+            roller_push = ps5.left > ps5.right ? ps5.left / 255.0 * max_r_push_pwr : ps5.right / 255.0 * max_r_push_pwr * -1;
 
             if (ps5.square == 1 && pre_square == 0)
             {
@@ -183,6 +186,7 @@ int main()
 
         can_pwr1[0] = CROW_SPEED_MAP.at(zozo_crow);
         can_pwr1[1] = pillar_push;
+        can_pwr1[2] = roller_push;
         can_pwr1[3] = PYLON_SPEED_MAP.at(pylon_rack);
 
         if(now - pre > 10ms) // CAN送信など制御信号の送信を行うスコープ
