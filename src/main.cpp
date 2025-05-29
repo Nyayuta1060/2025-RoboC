@@ -34,6 +34,73 @@ enum class state
     STOP,
     BACK
 };
+struct Ps5
+{
+    int8_t lstick_x = 0;
+    int8_t lstick_y = 0;
+    int8_t rstick_x = 0;
+    int8_t rstick_y = 0;
+    uint8_t l2 = 0;
+    uint8_t r2 = 0;
+
+    bool right = 0;
+    bool up = 0;
+    bool left = 0;
+    bool down = 0;
+    bool circle = 0;
+    bool triangle = 0;
+    bool square = 0;
+    bool cross = 0;
+    bool l1 = 0;
+    bool r1 = 0;
+    bool l3 = 0;
+    bool r3 = 0;
+    bool option = 0;
+    bool share = 0;
+
+    void parse(CANMessage msg)
+    {
+        switch (msg.id)
+        {
+            case 50:
+            lstick_x = msg.data[0];
+            lstick_y = msg.data[1];
+            rstick_x = msg.data[2];
+            rstick_y = msg.data[3];
+            l2 = msg.data[4];
+            r2 = msg.data[5];
+            break;
+
+            case 51:
+            right = msg.data[0] >> 3 & 1;
+            up = msg.data[0] >> 2 & 1;
+            left = msg.data[0] >> 1 & 1;
+            down = msg.data[0] & 1;
+            circle = msg.data[1] >> 3 & 1;
+            triangle = msg.data[1] >> 2 & 1;
+            square = msg.data[1] >> 1 & 1;
+            cross = msg.data[1] & 1;
+            l1 = msg.data[2];
+            r1 = msg.data[3];
+            l3 = msg.data[4];
+            r3 = msg.data[5];
+            option = msg.data[6];
+            share = msg.data[7];
+            break;
+        }
+    }
+
+    bool read(CAN& can)
+    {
+        CANMessage msg;
+        if (can.read(msg); msg.id == 50 || msg.id == 51)
+        {
+            parse(msg);
+            return true;
+        }
+        return false;
+    }
+};
 
 constexpr int CROW_SPEED = 15000;
 constexpr int PYLON_SPEED = 10000;
@@ -54,6 +121,7 @@ const std::map<state, int> PYLON_SPEED_MAP =
 
 int main()
 {
+    Ps5 ps5;
     auto zozo_crow = state::STOP;
     auto pylon_rack = state::STOP;
 
