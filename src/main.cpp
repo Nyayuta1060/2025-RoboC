@@ -124,6 +124,7 @@ int main()
     Ps5 ps5;
     auto zozo_crow = state::STOP;
     auto pylon_rack = state::STOP;
+    constexpr int max_pillar_pwr = 10000;
 
     int16_t can_pwr1[4] = {0};
     int16_t can_pwr2[4] = {0};
@@ -140,46 +141,14 @@ int main()
         auto now = HighResClock::now();
         static auto pre = now;
 
-        char received[15] = "";
         int pillar_push = 0;
 
-
-        if(readline(pc, received, sizeof(received)) == 0) //UART受取成功時のスコープ
+        if (ps5.read(can1))
         {
-            if(strcmp(received, "front_crow") == 0){
-                zozo_crow = state::FRONT;
-            }
-            else if(strcmp(received, "back_crow") == 0){
-                zozo_crow = state::BACK;
-            }
-            else if(strcmp(received, "stop_crow") == 0){
-                zozo_crow = state::STOP;
-            }
+            pillar_push = ps5.l2 > ps5.r2 ? ps5.l2 / 255.0 * max_pillar_pwr : ps5.r2 / 255.0 * max_pillar_pwr;
 
-            if (strcmp(received, "R2") == 0)
-            {
-                char pwr[8] = "";
-                if(readline(pc, pwr, sizeof(pwr), true, false) == 0){
-                    pillar_push = atoi(pwr);
-                }
-            }
-            else if (strcmp(received, "L2") == 0)
-            {
-                char pwr[8] = "";
-                if(readline(pc, pwr, sizeof(pwr), true, false) == 0){
-                    pillar_push = atoi(pwr) * -1;
-                }
-                
-            }
-            if(strcmp(received, "go_pylon") == 0){
-                pylon_rack = state::FRONT;
-            }
-            else if(strcmp(received, "back_pylon") == 0){
-                pylon_rack = state::BACK;
-            }
-            else if(strcmp(received, "stop_pylon") == 0){
-                pylon_rack = state::STOP;
-            }
+            pylon_rack = ps5.left ? state::FRONT : ps5.right ? state::BACK : state::STOP;
+            zozo_crow = ps5.up ? state::FRONT : ps5.down ? state::BACK : state::STOP;
         }
 
         can_pwr1[0] = CROW_SPEED_MAP.at(zozo_crow);
