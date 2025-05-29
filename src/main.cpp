@@ -20,9 +20,8 @@ std::array<Pid, robomas_amount> pid =
     Pid({roller_gain, -1, 1}),
     Pid({roller_gain, -1, 1})};
 
-constexpr int can_id[2] = {0};
+constexpr int can_id = 3;
 CANMessage msg1;
-CANMessage msg2;
 
 bool readline(BufferedSerial &serial, char *buffer, size_t size, bool is_integar = false, bool is_float = false);
 float duration_to_sec(const std::chrono::duration<float> &duration);
@@ -124,10 +123,11 @@ int main()
     Ps5 ps5;
     auto zozo_crow = state::STOP;
     auto pylon_rack = state::STOP;
+    int pillar_push = 0;
+
     constexpr int max_pillar_pwr = 10000;
 
     int16_t can_pwr1[4] = {0};
-    int16_t can_pwr2[4] = {0};
     // id1, 2: Roger id3, 4: むれ持ち上げ id5, 6: むれローラー
     int16_t robomas_rpm[6] = {0};
 
@@ -141,11 +141,9 @@ int main()
         auto now = HighResClock::now();
         static auto pre = now;
 
-        int pillar_push = 0;
-
         if (ps5.read(can1))
         {
-            pillar_push = ps5.l2 > ps5.r2 ? ps5.l2 / 255.0 * max_pillar_pwr : ps5.r2 / 255.0 * max_pillar_pwr;
+            pillar_push = ps5.l2 > ps5.r2 ? ps5.l2 / 255.0 * max_pillar_pwr : ps5.r2 / 255.0 * max_pillar_pwr * -1;
 
             pylon_rack = ps5.left ? state::FRONT : ps5.right ? state::BACK : state::STOP;
             zozo_crow = ps5.up ? state::FRONT : ps5.down ? state::BACK : state::STOP;
@@ -153,7 +151,7 @@ int main()
 
         can_pwr1[0] = CROW_SPEED_MAP.at(zozo_crow);
         can_pwr1[1] = pillar_push;
-        can_pwr2[0] = PYLON_SPEED_MAP.at(pylon_rack);
+        can_pwr1[3] = PYLON_SPEED_MAP.at(pylon_rack);
 
         if(now - pre > 10ms) // CAN送信など制御信号の送信を行うスコープ
         {
@@ -170,10 +168,8 @@ int main()
             }
             robomas.write();
 
-            CANMessage msg1(can_id[0], (const uint8_t *)&can_pwr1, 8);
-            CANMessage msg2(can_id[1], (const uint8_t *)&can_pwr2, 8);
+            CANMessage msg1(can_id, (const uint8_t *)&can_pwr1, 8);
             can1.write(msg1);
-            can1.write(msg2);
             pre = now;
         }
     }
