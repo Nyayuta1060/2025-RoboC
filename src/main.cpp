@@ -103,6 +103,7 @@ struct Ps5
 
 constexpr int CROW_SPEED = 15000;
 constexpr int PYLON_SPEED = 10000;
+constexpr int ROLLER_PUSH = 7000;
 
 const std::map<state, int> CROW_SPEED_MAP = 
 {
@@ -118,13 +119,20 @@ const std::map<state, int> PYLON_SPEED_MAP =
     {state::STOP, 0}
 };
 
+const std::map<state, int> ROLLER_PUSH_MAP = 
+{
+    {state::FRONT, ROLLER_PUSH},
+    {state::BACK, -ROLLER_PUSH},
+    {state::STOP, 0}
+};
+
 int main()
 {
     Ps5 ps5;
     auto zozo_crow = state::STOP;
     auto pylon_rack = state::STOP;
+    auto roller_push = state::STOP;
     int pillar_push = 0;
-    int roller_push = 0;
 
     constexpr int max_pillar_pwr = 10000;
     constexpr int max_r_push_pwr = 7000;
@@ -148,7 +156,8 @@ int main()
         if (ps5.read(can1))
         {
             pillar_push = ps5.l2 > ps5.r2 ? ps5.l2 / 255.0 * max_pillar_pwr : ps5.r2 / 255.0 * max_pillar_pwr * -1;
-            roller_push = ps5.left > ps5.right ? ps5.left / 255.0 * max_r_push_pwr : ps5.right / 255.0 * max_r_push_pwr * -1;
+            ps5.left ? state::FRONT : ps5.right ? state::BACK : state::STOP;
+
 
             if (ps5.square == 1 && pre_square == 0)
             {
@@ -186,7 +195,7 @@ int main()
 
         can_pwr1[0] = CROW_SPEED_MAP.at(zozo_crow);
         can_pwr1[1] = pillar_push;
-        can_pwr1[2] = roller_push;
+        can_pwr1[2] = ROLLER_PUSH_MAP.at(roller_push);
         can_pwr1[3] = PYLON_SPEED_MAP.at(pylon_rack);
 
         if(now - pre > 10ms) // CAN送信など制御信号の送信を行うスコープ
