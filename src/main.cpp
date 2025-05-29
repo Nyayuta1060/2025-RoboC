@@ -135,7 +135,7 @@ int main()
     int pillar_push = 0;
 
     constexpr int max_pillar_pwr = 10000;
-    constexpr int max_r_push_pwr = 7000;
+
 
     int16_t can_pwr1[4] = {0};
     // id1, 2: Roger id3, 4: むれ持ち上げ id5, 6: むれローラー
@@ -156,7 +156,7 @@ int main()
         if (ps5.read(can1))
         {
             pillar_push = ps5.l2 > ps5.r2 ? ps5.l2 / 255.0 * max_pillar_pwr : ps5.r2 / 255.0 * max_pillar_pwr * -1;
-            ps5.left ? state::FRONT : ps5.right ? state::BACK : state::STOP;
+            roller_push = ps5.left ? state::FRONT : ps5.right ? state::BACK : state::STOP;
 
 
             if (ps5.square == 1 && pre_square == 0)
