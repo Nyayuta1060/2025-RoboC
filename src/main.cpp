@@ -103,6 +103,7 @@ struct Ps5
 
 constexpr int CROW_SPEED = 15000;
 constexpr int PYLON_SPEED = 10000;
+constexpr int ROLLER_ROT_SPEED = 5000;
 
 const std::map<state, int> CROW_SPEED_MAP = 
 {
@@ -118,11 +119,19 @@ const std::map<state, int> PYLON_SPEED_MAP =
     {state::STOP, 0}
 };
 
+const std::map<state, int> ROLLER_ROT_SPEED_MAP = 
+{
+    {state::FRONT, ROLLER_ROT_SPEED},
+    {state::BACK, -ROLLER_ROT_SPEED},
+    {state::STOP, 0}
+};
+
 int main()
 {
     Ps5 ps5;
     auto zozo_crow = state::STOP;
     auto pylon_rack = state::STOP;
+    auto roller_rot = state::STOP;
     int pillar_push = 0;
 
     constexpr int max_pillar_pwr = 10000;
@@ -142,6 +151,7 @@ int main()
         static auto pre = now;
         static bool pre_square = 0;
         static bool pre_circle = 0;
+        static bool pre_triangle = 0;
 
         if (ps5.read(can1))
         {
@@ -177,8 +187,21 @@ int main()
                     break;
                 }
             }
+            if (ps5.triangle && !pre_triangle)
+            {
+                switch (roller_rot)
+                {
+                    case state::STOP:
+                    roller_rot = state::FRONT;
+                    break;
+                    case state::FRONT:
+                    roller_rot = state::STOP;
+                    break;
+                }
+            }
             pre_square = ps5.square;
             pre_circle = ps5.circle;
+            pre_triangle = ps5.triangle;
         }
 
         can_pwr1[0] = CROW_SPEED_MAP.at(zozo_crow);
