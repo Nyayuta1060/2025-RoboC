@@ -208,6 +208,9 @@ int main()
         can_pwr1[1] = pillar_push;
         can_pwr1[3] = PYLON_SPEED_MAP.at(pylon_rack);
 
+        robomas_rpm[4] = roller_rot == state::FRONT ? ROLLER_ROT_SPEED : 0;
+        robomas_rpm[5] = roller_rot == state::FRONT ? -ROLLER_ROT_SPEED : 0;
+
         if(now - pre > 10ms) // CAN送信など制御信号の送信を行うスコープ
         {
             float elapsed = duration_to_sec(now - pre);
