@@ -103,6 +103,7 @@ struct Ps5
 
 constexpr int CROW_SPEED = 15000;
 constexpr int PYLON_SPEED = 10000;
+constexpr int ROGER_SPEED = 5000;
 constexpr int ROLLER_PUSH = 7000;
 constexpr int ROLLER_ROT_SPEED = 5000;
 
@@ -131,6 +132,11 @@ const std::map<state, int> ROLLER_ROT_SPEED_MAP =
 {
     {state::FRONT, ROLLER_ROT_SPEED},
     {state::BACK, -ROLLER_ROT_SPEED},
+};
+const std::map<state, int> ROGER_SPEED_MAP = 
+{
+    {state::FRONT, ROGER_SPEED},
+    {state::BACK, -ROGER_SPEED},
     {state::STOP, 0}
 };
 
@@ -141,6 +147,7 @@ int main()
     auto pylon_rack = state::STOP;
     auto roller_push = state::STOP;
     auto roller_rot = state::STOP;
+    auto roger = state::STOP;
     int pillar_push = 0;
 
     constexpr int max_pillar_pwr = 10000;
@@ -168,6 +175,7 @@ int main()
             pillar_push = ps5.l2 > ps5.r2 ? ps5.l2 / 255.0 * max_pillar_pwr : ps5.r2 / 255.0 * max_pillar_pwr * -1;
             roller_push = ps5.left ? state::FRONT : ps5.right ? state::BACK : state::STOP;
 
+            roger = ps5.l1 ? state::FRONT : ps5.l2 ? state::BACK : state::STOP;
 
             if (ps5.square == 1 && pre_square == 0)
             {
@@ -221,6 +229,8 @@ int main()
         can_pwr1[2] = ROLLER_PUSH_MAP.at(roller_push);
         can_pwr1[3] = PYLON_SPEED_MAP.at(pylon_rack);
 
+        robomas_rpm[0] = ROGER_SPEED_MAP.at(roger);
+        robomas_rpm[1] = -ROGER_SPEED_MAP.at(roger);
         robomas_rpm[4] = roller_rot == state::FRONT ? ROLLER_ROT_SPEED : 0;
         robomas_rpm[5] = roller_rot == state::FRONT ? -ROLLER_ROT_SPEED : 0;
 
