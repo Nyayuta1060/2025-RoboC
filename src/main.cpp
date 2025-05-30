@@ -105,6 +105,7 @@ constexpr int CROW_SPEED = 15000;
 constexpr int PYLON_SPEED = 10000;
 constexpr int ROGER_SPEED = 5000;
 constexpr int ROLLER_PUSH = 7000;
+constexpr int ROLLER_ROT_SPEED = 5000;
 
 const std::map<state, int> CROW_SPEED_MAP = 
 {
@@ -127,6 +128,11 @@ const std::map<state, int> ROLLER_PUSH_MAP =
     {state::STOP, 0}
 };
 
+const std::map<state, int> ROLLER_ROT_SPEED_MAP = 
+{
+    {state::FRONT, ROLLER_ROT_SPEED},
+    {state::BACK, -ROLLER_ROT_SPEED},
+};
 const std::map<state, int> ROGER_SPEED_MAP = 
 {
     {state::FRONT, ROGER_SPEED},
@@ -140,6 +146,7 @@ int main()
     auto zozo_crow = state::STOP;
     auto pylon_rack = state::STOP;
     auto roller_push = state::STOP;
+    auto roller_rot = state::STOP;
     auto roger = state::STOP;
     int pillar_push = 0;
 
@@ -161,6 +168,7 @@ int main()
         static auto pre = now;
         static bool pre_square = 0;
         static bool pre_circle = 0;
+        static bool pre_triangle = 0;
 
         if (ps5.read(can1))
         {
@@ -199,8 +207,21 @@ int main()
                     break;
                 }
             }
+            if (ps5.triangle && !pre_triangle)
+            {
+                switch (roller_rot)
+                {
+                    case state::STOP:
+                    roller_rot = state::FRONT;
+                    break;
+                    case state::FRONT:
+                    roller_rot = state::STOP;
+                    break;
+                }
+            }
             pre_square = ps5.square;
             pre_circle = ps5.circle;
+            pre_triangle = ps5.triangle;
         }
 
         can_pwr1[0] = CROW_SPEED_MAP.at(zozo_crow);
@@ -210,6 +231,8 @@ int main()
 
         robomas_rpm[0] = ROGER_SPEED_MAP.at(roger);
         robomas_rpm[1] = -ROGER_SPEED_MAP.at(roger);
+        robomas_rpm[4] = roller_rot == state::FRONT ? ROLLER_ROT_SPEED : 0;
+        robomas_rpm[5] = roller_rot == state::FRONT ? -ROLLER_ROT_SPEED : 0;
 
         if(now - pre > 10ms) // CAN送信など制御信号の送信を行うスコープ
         {
