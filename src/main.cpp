@@ -7,9 +7,9 @@
 BufferedSerial pc(USBTX, USBRX, 115200);
 CAN can1(PA_11, PA_12, 1e6);
 dji::C620 robomas(PB_12, PB_13);
-PidGain roger_gain = {1, 1, 1};
-PidGain lift_gain = {1, 1, 1};
-PidGain roller_gain = {1, 1, 1};
+PidGain roger_gain = {0.001, 0.001, 0.0};
+PidGain lift_gain = {0.001, 0.001, 0.0};
+PidGain roller_gain = {0.001, 0.001, 0.0};
 constexpr int robomas_amount = 6;
 
 std::array<Pid, robomas_amount> pid =
