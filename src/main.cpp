@@ -235,10 +235,10 @@ int main()
             pre_triangle = ps5.triangle;
         }
 
-        can_pwr1[0] = CROW_SPEED_MAP.at(zozo_crow);
+        can_pwr1[0] = CROW_SPEED_MAP.at(pylon_rack);
         can_pwr1[1] = pillar_push;
         can_pwr1[2] = ROLLER_PUSH_MAP.at(roller_push);
-        can_pwr1[3] = PYLON_SPEED_MAP.at(pylon_rack);
+        can_pwr1[3] = PYLON_SPEED_MAP.at(zozo_crow);
 
         robomas_rpm[0] = ROGER_SPEED_MAP.at(roger);
         robomas_rpm[1] = -ROGER_SPEED_MAP.at(roger);
