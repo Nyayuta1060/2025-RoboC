@@ -188,7 +188,7 @@ int main()
             pillar_push = ps5.l2 > ps5.r2 ? ps5.l2 / 255.0 * max_pillar_pwr : ps5.r2 / 255.0 * max_pillar_pwr * -1;
             roller_push = ps5.left ? state::FRONT : ps5.right ? state::BACK : state::STOP;
 
-            roger = ps5.l1 ? state::FRONT : ps5.l2 ? state::BACK : state::STOP;
+            roger = ps5.l1 ? state::FRONT : ps5.r1 ? state::BACK : state::STOP;
             lift = ps5.up ? state::FRONT : ps5.down ? state::BACK : state::STOP;
 
             if (ps5.square == 1 && pre_square == 0)
