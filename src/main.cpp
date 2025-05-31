@@ -11,6 +11,7 @@ PidGain roger_gain = {0.001, 0.001, 0.0};
 PidGain lift_gain = {0.001, 0.001, 0.0};
 PidGain roller_gain = {0.001, 0.001, 0.0};
 constexpr int robomas_amount = 6;
+constexpr int max_robomas_pwr = 8000;
 
 std::array<Pid, robomas_amount> pid =
     {Pid({roger_gain, -1, 1}),
@@ -106,7 +107,7 @@ constexpr int PYLON_SPEED = 10000;
 constexpr int ROGER_SPEED = 5000;
 constexpr int ROLLER_PUSH = 7000;
 constexpr int ROLLER_ROT_SPEED = 5000;
-constexpr int MURE_LIFT_SPEED = 2500;
+constexpr int MURE_LIFT_SPEED = 2000;
 
 const std::map<state, int> CROW_SPEED_MAP = 
 {
@@ -171,6 +172,7 @@ int main()
     {
         pid[i].reset();
     }
+    robomas.set_max_output(max_robomas_pwr);
 
     while(1)
     {
@@ -179,13 +181,14 @@ int main()
         static bool pre_square = 0;
         static bool pre_circle = 0;
         static bool pre_triangle = 0;
+        robomas.read_data();
 
         if (ps5.read(can1))
         {
             pillar_push = ps5.l2 > ps5.r2 ? ps5.l2 / 255.0 * max_pillar_pwr : ps5.r2 / 255.0 * max_pillar_pwr * -1;
             roller_push = ps5.left ? state::FRONT : ps5.right ? state::BACK : state::STOP;
 
-            roger = ps5.l1 ? state::FRONT : ps5.l2 ? state::BACK : state::STOP;
+            roger = ps5.l1 ? state::FRONT : ps5.r1 ? state::BACK : state::STOP;
             lift = ps5.up ? state::FRONT : ps5.down ? state::BACK : state::STOP;
 
             if (ps5.square == 1 && pre_square == 0)
@@ -253,10 +256,9 @@ int main()
 
             for (int i = 0; i < robomas_amount; i++)
             {
-                constexpr float rmp_to_rad = 2 * M_PI / 60;
-                float motor_dps = robomas.get_rpm(i + 1) * rmp_to_rad;
+                int motor_dps = robomas.get_rpm(i + 1);
                 const float percent = pid[i].calc(robomas_rpm[i], motor_dps, elapsed);
-                // printf("dps: %f, goal: %d, out: %d\n", motor_dps, goal_ang_vel, out);
+                // printf("%d, %d\n", robomas_rpm[2], motor_dps);
 
                 robomas.set_output_percent(percent, i + 1);
             }
