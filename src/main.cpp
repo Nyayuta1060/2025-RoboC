@@ -105,7 +105,7 @@ struct Ps5
 constexpr int CROW_SPEED = 15000;
 constexpr int PYLON_SPEED = 10000;
 constexpr int ROGER_SPEED = 5000;
-constexpr int ROLLER_PUSH = 7000;
+constexpr int ROLLER_PUSH = 10000;
 constexpr int ROLLER_ROT_SPEED = 5000;
 constexpr int MURE_LIFT_SPEED = 2000;
 
@@ -119,7 +119,7 @@ const std::map<state, int> CROW_SPEED_MAP =
 const std::map<state, int> PYLON_SPEED_MAP = 
 {
     {state::FRONT, PYLON_SPEED},
-    {state::BACK, -PYLON_SPEED},
+    {state::BACK, -PYLON_SPEED * 0.5},
     {state::STOP, 0}
 };
 
